@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Тест на набор текста</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        #prompt, #output {
+            border: 1px solid #ccc;
+            padding: 20px;
+            min-height: 100px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+        }
+        #modal {
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+        }
+        #overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="overlay"></div>
+<div id="modal">
+    <p>Вы хотите завершить тест?</p>
+    <button onclick="endTest()">Остановить и показать отчет</button>
+    <button onclick="continueTest()">Продолжить</button>
+</div>
+
+<h1>Наберите следующий текст:</h1>
+<div id="prompt">Загрузка текста...</div>
+
+<h2>Вы печатаете:</h2>
+<div id="output"></div>
+
+<script>
+    const BASE_URL = "http://localhost:8000";
+
+    let promptText = "";
+    let inputText = "";
+    let modalVisible = false;
+
+    // Получение текста
+    fetch(`${BASE_URL}/get-text`)
+        .then(res => res.json())
+        .then(data => {
+            promptText = data.text;
+            document.getElementById("prompt").textContent = promptText;
+        });
+
+    // Сбор данных о клавишах
+    window.keyPresses = {};
+
+    // Игнорируемые клавиши
+    const ignoredKeys = new Set([
+        "Shift", "Control", "Alt", "Meta", "CapsLock",
+        "Tab", "Escape", "Enter", "Backspace", "Delete"
+    ]);
+
+    document.addEventListener("keydown", (e) => {
+        if (!e.isTrusted) return;
+
+        if (ignoredKeys.has(e.key)) return;
+
+        window.keyPresses[e.code] = { key: e.key, pressed_time: performance.now() };
+    });
+
+    document.addEventListener("keyup", (e) => {
+        if (!e.isTrusted) return;
+
+        if (ignoredKeys.has(e.key)) return;
+
+        const entry = window.keyPresses[e.code];
+        if (!entry) return;
+
+        entry.released_time = performance.now();
+        entry.duration = entry.released_time - entry.pressed_time;
+
+        inputText += entry.key;
+        document.getElementById("output").textContent = inputText;
+
+        fetch(`${BASE_URL}/add_metric`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(entry),
+        });
+
+        delete window.keyPresses[e.code];
+    });
+
+    // ESC — показываем модальное окно
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            showModal();
+        }
+    });
+
+    function showModal() {
+        if (modalVisible) return;
+        modalVisible = true;
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("modal").style.display = "block";
+    }
+
+    function hideModal() {
+        modalVisible = false;
+        document.getElementById("overlay").style.display = "none";
+        document.getElementById("modal").style.display = "none";
+    }
+
+    async function endTest() {
+        hideModal();
+
+        const response = await fetch(`${BASE_URL}/compare`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ input_text: inputText, original_text: promptText }),
+        });
+        const result = await response.json();
+
+        alert(`Количество ошибок: ${result.errors}`);
+    }
+
+    function continueTest() {
+        hideModal();
+    }
+</script>
+</body>
+</html>

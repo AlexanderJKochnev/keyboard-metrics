@@ -1,0 +1,60 @@
+services:
+  postgres_db: # this is the name of the service and name of the host (POSTGRES_HOST)
+    restart: unless-stopped
+    container_name: postgres_db
+    image: postgres:alpine
+    expose:
+     - "${POSTGRES_PORT}"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      # pgsql initializing scripts shall be placed in /initdb.d directory
+    env_file:
+      - .env
+    networks:
+      pgnetwork:
+        aliases:
+          - postgres_db
+    healthcheck:
+      test: [ "CMD", "pg_isready -h db"]
+      # add -h dd in order to avoid message FATAL: role 'root' doesnot exist
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      start_interval: 5s
+  adminer:
+    container_name: pg_admin
+    image: adminer
+    restart: unless-stopped
+    environment:
+      - ADMINER_PLUGINS=tables-filter enum-option enum-types
+      - ADMINER_DESIGN=nette
+    ports:
+      - 8082:8080
+    networks:
+      - pgnetwork
+
+  app:
+    container_name: app
+    build: .
+    command: uvicorn app.main:app --host ${APPHOST} --port ${APPPORT}
+    depends_on:
+      - postgres_db
+    ports:
+      - ${APPPORT}:${APPPORT}
+    environment:
+      POSTGRES_HOST: "postgres_db"
+      # POSTGRES_HOST shall be equal postgres service name
+    volumes:
+      - ./templates:/app/templates
+    networks:
+      - pgnetwork
+    
+
+networks:
+  pgnetwork:
+    driver: bridge
+
+volumes:
+  pg_data:
+    name: pg_data

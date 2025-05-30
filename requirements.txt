@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+# sqlalchemy
+sqlalchemy-ext
+python-dotenv
+requests
+pydantic
+asyncpg
+httpx
