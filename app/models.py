@@ -24,6 +24,7 @@ class ComparisonResult(Base):
     input_text = Column(String)
     original_text = Column(String)
     error_count = Column(Integer)
+    user_id = Column(Integer)  # Ссылка на пользователя
 
 
 class User(Base):

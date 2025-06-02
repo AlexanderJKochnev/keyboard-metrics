@@ -1,6 +1,7 @@
 # app/main.py
 
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -12,12 +13,15 @@ import os
 import httpx
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.future import select
+from typing import Optional
+
 
 # Загрузка переменных окружения
 load_dotenv()
 
 # Импорт моделей
-from app.models import Base, KeyMetric, ComparisonResult  # NOQA: E402
+from app.models import Base, KeyMetric, ComparisonResult, User  # NOQA: E402
 
 app = FastAPI()
 app.add_middleware(
@@ -27,6 +31,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.mount("/static", StaticFiles(directory="templates"), name="static")
 # Логирование
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -156,3 +161,48 @@ async def compare_text(result: ComparisonResultModel,
             status_code=500,
             detail=f"Ошибка БД: {str(e)}"
         )
+
+
+# === Pydantic модели для пользователя ===
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    age: Optional[int] = None
+    gender: Optional[str] = None
+
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
+# === Эндпоинты для пользователя ===
+@app.post("/register")
+async def register_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.username
+                                                 == user.username))
+    existing_user = result.scalars().first()
+
+    if existing_user:
+        raise HTTPException(status_code=400,
+                            detail="Пользователь уже существует")
+
+    db_user = User(**user.dict())
+    db.add(db_user)
+    await db.commit()
+    await db.refresh(db_user)
+    return {"status": "ok", "user_id": db_user.id}
+
+
+@app.post("/login")
+async def login_user(credentials: UserLogin,
+                     db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.username ==
+                                                 credentials.username))
+    user = result.scalars().first()
+
+    if not user or user.password != credentials.password:
+        raise HTTPException(status_code=400,
+                            detail="Неверный логин или пароль")
+
+    return {"status": "ok", "user_id": user.id}

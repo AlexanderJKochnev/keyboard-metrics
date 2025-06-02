@@ -1,0 +1,83 @@
+/* templates/style.css */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 40px;
+}
+
+#prompt,
+#output {
+    border: 1px solid #ccc;
+    padding: 20px;
+    min-height: 100px;
+    margin-top: 20px;
+    white-space: pre-wrap;
+    background-color: #f9f9f9;
+}
+
+#instructions {
+    font-size: 16px;
+    color: #555;
+    margin-top: 10px;
+}
+
+button.stop-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Модальное окно */
+#auth-modal,
+#register-modal {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    display: block;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: block;
+}
+
+.hidden {
+    display: none !important;
+}
+
+form input {
+    display: block;
+    margin-bottom: 10px;
+    padding: 6px;
+    width: 100%;
+}
+
+button {
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+select,
+button {
+    height: 36px;
+    font-size: 14px;
+}

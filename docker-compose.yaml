@@ -15,11 +15,11 @@ services:
         aliases:
           - postgres_db
     healthcheck:
-      test: [ "CMD", "pg_isready -h db"]
+      test: [ "CMD", "pg_isready -h postgres_db"]
       # add -h dd in order to avoid message FATAL: role 'root' doesnot exist
-      interval: 1m30s
+      interval: 10s # 1m30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 40s
       start_interval: 5s
   adminer:
@@ -40,6 +40,9 @@ services:
     command: uvicorn app.main:app --host ${APPHOST} --port ${APPPORT}
     depends_on:
       - postgres_db
+      #postgres_db:
+      #   condition: service_healthy
+    
     ports:
       - ${APPPORT}:${APPPORT}
     environment:
