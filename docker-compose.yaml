@@ -22,6 +22,7 @@ services:
       retries: 5
       start_period: 40s
       start_interval: 5s
+
   adminer:
     container_name: pg_admin
     image: adminer
@@ -37,11 +38,11 @@ services:
   app:
     container_name: app
     build: .
+    restart: unless-stopped
     command: uvicorn app.main:app --host ${APPHOST} --port ${APPPORT}
     depends_on:
       - postgres_db
-      #postgres_db:
-      #   condition: service_healthy
+
     
     ports:
       - ${APPPORT}:${APPPORT}

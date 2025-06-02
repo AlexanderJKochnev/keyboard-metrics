@@ -25,6 +25,7 @@ class ComparisonResult(Base):
     original_text = Column(String)
     error_count = Column(Integer)
     user_id = Column(Integer)  # Ссылка на пользователя
+    completion_percent = Column(Float)  # ← новое поле
 
 
 class User(Base):

@@ -65,6 +65,7 @@ class ComparisonResultModel(BaseModel):
     input_text: str
     original_text: str
     errors: int
+    user_id: int  # ← добавлено
 
 
 # === Асинхронная зависимость для получения сессии ===
@@ -137,17 +138,21 @@ async def compare_text(result: ComparisonResultModel,
                        db: AsyncSession = Depends(get_db)):
     input_text = result.input_text
     original_text = result.original_text
+    user_id = result.user_id
 
     min_len = min(len(input_text), len(original_text))
     errors = sum(
         1 for i in range(min_len) if input_text[i] != original_text[i]
     )
     errors += abs(len(input_text) - len(original_text))
+    completion = round((len(input_text) / len(original_text)) * 100, 2)
 
     db_result = ComparisonResult(
         input_text=input_text,
         original_text=original_text,
-        error_count=errors
+        error_count=errors,
+        user_id=user_id,
+        completion_percent=completion
     )
     db.add(db_result)
     try:

@@ -98,6 +98,15 @@ function showModal() {
 
     document.getElementById("overlay").style.display = "block";
     document.getElementById("modal").style.display = "block";
+    const errors = countErrors(inputText, promptText);
+    const completion = Math.round((inputText.length / promptText.length) * 100);
+
+    const modal = document.getElementById("modal");
+    modal.innerHTML = `
+        <p>Количество ошибок: ${errors}</p>
+        <p>Тест выполнен на ${completion}%</p>
+        <button onclick="endTest()">Закрыть</button>
+    `;
 }
 
 function hideModal() {
@@ -123,9 +132,9 @@ async function endTest() {
             user_id: currentUser
         }),
     });
-
     const result = await response.json();
-    alert(`Количество ошибок: ${result.errors}`);
+    alert(`Количество ошибок: ${result.errors}\nТест выполнен на ${result.completion}%`);
+    document.getElementById("repeat-test-btn").classList.remove("hidden");
 }
 
 function continueTest() {
@@ -171,10 +180,16 @@ function countErrors(input, original) {
 }
 
 // === Авторизация ===
+//function showRegister() {
+//    document.getElementById("register-form").classList.remove("hidden");
+//    document.getElementById("login-form").classList.add("hidden");
+//}
 function showRegister() {
     document.getElementById("register-form").classList.remove("hidden");
     document.getElementById("login-form").classList.add("hidden");
+    document.querySelector("button[onclick='showRegister()']").style.display = "none";
 }
+
 
 async function login() {
     const login = document.getElementById("login").value.trim();
