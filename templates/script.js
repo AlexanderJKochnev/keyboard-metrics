@@ -146,7 +146,6 @@ async function endTest() {
         overlay.style.display = "block";
         modal.classList.remove("hidden");
         overlay.classList.remove("hidden");
-        alert("иым туту");
 
         modal.innerHTML = `
             <p>Количество ошибок: ${result.errors}</p>
@@ -268,4 +267,55 @@ async function showMainContent() {
     await loadPrompt();           // Загружаем текст
     enableInputTracking();       // Разрешаем ввод
     setupEventListeners();       // Назначаем Esc и кнопку остановки
+}
+
+function repeatTest() {
+    // Очищаем введённый текст
+    inputText = "";
+    document.getElementById("output").textContent = "";
+
+    // Показываем кнопку "Остановить печать"
+    const stopBtn = document.getElementById("stop-test-btn");
+    if (stopBtn) {
+        stopBtn.classList.remove("hidden");
+    }
+
+    // Скрываем блок с кнопками "Повторить" / "Новый тест"
+    const afterButtons = document.getElementById("after-test-buttons");
+    if (afterButtons) {
+        afterButtons.classList.add("hidden");
+    }
+
+    // Обновляем интерфейс
+    document.getElementById("modal").classList.add("hidden");
+    document.getElementById("overlay").classList.add("hidden");
+
+    modalVisible = false;
+}
+
+async function newTest() {
+    // Очищаем введённый текст
+    inputText = "";
+    document.getElementById("output").textContent = "";
+
+    // Скрываем старый результат
+    document.getElementById("modal").classList.add("hidden");
+    document.getElementById("overlay").classList.add("hidden");
+
+    // Показываем кнопку "Остановить печать"
+    const stopBtn = document.getElementById("stop-test-btn");
+    if (stopBtn) {
+        stopBtn.classList.remove("hidden");
+    }
+
+    // Скрываем блок с кнопками "Повторить" / "Новый тест"
+    const afterButtons = document.getElementById("after-test-buttons");
+    if (afterButtons) {
+        afterButtons.classList.add("hidden");
+    }
+
+    // Загружаем новый текст
+    await loadPrompt();
+
+    modalVisible = false;
 }
