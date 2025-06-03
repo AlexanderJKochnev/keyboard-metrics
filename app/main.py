@@ -64,7 +64,6 @@ class KeyData(BaseModel):
 class ComparisonResultModel(BaseModel):
     input_text: str
     original_text: str
-    errors: int
     user_id: int  # ← добавлено
 
 
@@ -158,7 +157,8 @@ async def compare_text(result: ComparisonResultModel,
     try:
         await db.commit()
         await db.refresh(db_result)
-        return {"errors": errors}
+        return {"errors": errors,
+                "completion": completion}
     except Exception as e:
         await db.rollback()
         logger.error(f"Ошибка сохранения результата сравнения: {e}")
