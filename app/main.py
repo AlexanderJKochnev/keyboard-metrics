@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import update
 # from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 import logging
@@ -160,14 +161,29 @@ async def compare_text(result: ComparisonResultModel,
         original_text=original_text,
         error_count=errors,
         user_id=user_id,
-        completion_percent=completion
+        completion_percent=completion,
+        avg_kht=None,
+        avg_iki=None
     )
     db.add(db_result)
+    await db.flush()  # чтобы получить ID до коммита
+    # === Обновляем все метрики текущего теста ===
+    await db.execute(
+            update(KeyMetric).where(
+                    KeyMetric.user_id == user_id,
+                    KeyMetric.test_result_id is None).values(
+                    test_result_id=db_result.id))
     try:
         await db.commit()
         await db.refresh(db_result)
+        # === Вычисляем KHT/IKI и обновляем запись ===
+        from app.metrics import attach_metrics_to_test
+        updated_result = await attach_metrics_to_test(db_result.id, db)
+        await db.refresh(updated_result)
         return {"errors": errors,
                 "completion": completion,
+                "avg_kht": updated_result.avg_kht,
+                "avg_iki": updated_result.avg_iki,
                 "ok": True}
     except Exception as e:
         await db.rollback()

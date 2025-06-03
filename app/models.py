@@ -16,6 +16,7 @@ class KeyMetric(Base):
     released_time = Column(Float, nullable=True)
     duration = Column(Float, nullable=True)
     user_id = Column(Integer)  # Ссылка на пользователя
+    test_result_id = Column(Integer)  # ID из comparison_results
 
 
 class ComparisonResult(Base):
@@ -26,6 +27,8 @@ class ComparisonResult(Base):
     error_count = Column(Integer)
     user_id = Column(Integer)  # Ссылка на пользователя
     completion_percent = Column(Float)  # ← новое поле
+    avg_kht = Column(Float)  # среднее время удержания клавиш
+    avg_iki = Column(Float)  # средний интервал между нажатиями
 
 
 class User(Base):
@@ -37,5 +40,3 @@ class User(Base):
     age = Column(Integer)
     gender = Column(String)  # 'male', 'female', 'other'
     created_at = Column(DateTime, server_default="now()")
-
-
