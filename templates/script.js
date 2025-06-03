@@ -106,20 +106,66 @@ function hideModal() {
 }
 
 async function endTest() {
-    hideModal();
+    const input = document.getElementById("output").textContent;
+    const original = promptText;
 
-    const response = await fetch(`${BASE_URL}/compare`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            input_text: inputText,
-            original_text: promptText,
-            user_id: currentUser
-        }),
-    });
-    const result = await response.json();
-    alert(`Количество ошибок: ${result.errors}\nТест выполнен на ${result.completion}%`);
-    document.getElementById("repeat-test-btn").classList.remove("hidden");
+    if (!input || !original || !currentUser) {
+        alert("Ошибка: текст или пользователь не определены");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${BASE_URL}/compare`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                input_text: input,
+                original_text: original,
+                user_id: currentUser
+            }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error("Ошибка при сравнении текста");
+        }
+
+
+        // ===  ===
+        const modal = document.getElementById("modal");
+        const overlay = document.getElementById("overlay");
+        // проверка видимости окон
+        if (!modal || !overlay) {
+            console.error("Модальные элементы не найдены");
+            alert("Ошибка интерфейса: нет модального окна");
+            return;
+        }
+        // Сбрасываем стили и классы
+        modal.style.display = "block";
+        overlay.style.display = "block";
+        modal.classList.remove("hidden");
+        overlay.classList.remove("hidden");
+        alert("иым туту");
+
+        modal.innerHTML = `
+            <p>Количество ошибок: ${result.errors}</p>
+            <p>Тест выполнен на ${result.completion}%</p>
+            <button onclick="repeatTest()">Повторить тест</button>
+            <button onclick="newTest()">Новый тест</button>
+        `;
+
+        // === Показываем модальное окно ===
+        document.getElementById("overlay").classList.remove("hidden");
+        document.getElementById("modal").classList.remove("hidden");
+
+        // === Скрываем кнопку "Остановить печать" ===
+        document.getElementById("stop-test-btn").classList.add("hidden");
+
+    } catch (err) {
+        console.error("Ошибка завершения теста:", err);
+        alert("Не удалось получить результат");
+    }
 }
 
 function continueTest() {
