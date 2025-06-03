@@ -166,7 +166,8 @@ async def compare_text(result: ComparisonResultModel,
         await db.commit()
         await db.refresh(db_result)
         return {"errors": errors,
-                "completion": completion}
+                "completion": completion,
+                "ok": True}
     except Exception as e:
         await db.rollback()
         logger.error(f"Ошибка сохранения результата сравнения: {e}")

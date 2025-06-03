@@ -92,21 +92,7 @@ function setupEventListeners() {
 function showModal() {
     if (modalVisible) return;
     modalVisible = true;
-
-    document.getElementById("overlay").classList.remove("hidden");
-    document.getElementById("modal").classList.remove("hidden");
-
-    document.getElementById("overlay").style.display = "block";
-    document.getElementById("modal").style.display = "block";
-    const errors = countErrors(inputText, promptText);
-    const completion = Math.round((inputText.length / promptText.length) * 100);
-
-    const modal = document.getElementById("modal");
-    modal.innerHTML = `
-        <p>Количество ошибок: ${errors}</p>
-        <p>Тест выполнен на ${completion}%</p>
-        <button onclick="endTest()">Закрыть</button>
-    `;
+    const result = endTest();
 }
 
 function hideModal() {
@@ -128,7 +114,6 @@ async function endTest() {
         body: JSON.stringify({
             input_text: inputText,
             original_text: promptText,
-            errors: countErrors(inputText, promptText),
             user_id: currentUser
         }),
     });
@@ -141,49 +126,8 @@ function continueTest() {
     hideModal();
 }
 
-// === Подсчёт ошибок с учётом настроек ===
-function countErrors(input, original) {
-    let processedInput = input;
-    let processedOriginal = original;
-
-    const ignoreCase = document.getElementById("ignoreCase")?.checked;
-    const ignoreYo = document.getElementById("ignoreYo")?.checked;
-    const ignorePunctuation = document.getElementById("ignorePunctuation")?.checked;
-
-    if (ignoreCase) {
-        processedInput = processedInput.toLowerCase();
-        processedOriginal = processedOriginal.toLowerCase();
-    }
-
-    if (ignoreYo) {
-        processedInput = processedInput.replace(/ё/g, 'е');
-        processedOriginal = processedOriginal.replace(/ё/g, 'е');
-    }
-
-    if (ignorePunctuation) {
-        const punctuationRegex = /[.,\/#!$%\^&\*;:{}=\-_`~()]/g;
-        processedInput = processedInput.replace(punctuationRegex, '');
-        processedOriginal = processedOriginal.replace(punctuationRegex, '');
-    }
-
-    const minLength = Math.min(processedInput.length, processedOriginal.length);
-    let errors = 0;
-
-    for (let i = 0; i < minLength; i++) {
-        if (processedInput[i] !== processedOriginal[i]) {
-            errors++;
-        }
-    }
-
-    errors += Math.abs(processedInput.length - processedOriginal.length);
-    return errors;
-}
 
 // === Авторизация ===
-//function showRegister() {
-//    document.getElementById("register-form").classList.remove("hidden");
-//    document.getElementById("login-form").classList.add("hidden");
-//}
 function showRegister() {
     document.getElementById("register-form").classList.remove("hidden");
     document.getElementById("login-form").classList.add("hidden");
