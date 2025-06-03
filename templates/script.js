@@ -4,6 +4,7 @@ let inputText = "";
 let modalVisible = false;
 let currentUser = null;
 let inputEnabled = false;
+let test_result_id = "";
 
 // === Маппинг EN → RU ===
 const enToRuMap = {
@@ -60,7 +61,9 @@ function handleKeyUp(e) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
         ...entry,
-        user_id: currentUser}),
+        test_result_id: test_result_id
+        //user_id: currentUser
+        }),
     });
 
     delete window.keyPresses[e.code];
@@ -279,7 +282,7 @@ function repeatTest() {
     // Очищаем введённый текст
     inputText = "";
     document.getElementById("output").textContent = "";
-
+    test_result_id = generateUuid(); // новый ID для повторного теста
     // Показываем кнопку "Остановить печать"
     const stopBtn = document.getElementById("stop-test-btn");
     if (stopBtn) {
@@ -303,7 +306,7 @@ async function newTest() {
     // Очищаем введённый текст
     inputText = "";
     document.getElementById("output").textContent = "";
-
+    test_result_id = generateUuid(); // новый ID для повторного теста
     // Скрываем старый результат
     document.getElementById("modal").classList.add("hidden");
     document.getElementById("overlay").classList.add("hidden");
@@ -324,4 +327,13 @@ async function newTest() {
     await loadPrompt();
 
     modalVisible = false;
+}
+
+// генерация uuid
+function generateUuid() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random();
+        const v = c === 'x' ? (r * 16) % 16 | 0 : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
 }
