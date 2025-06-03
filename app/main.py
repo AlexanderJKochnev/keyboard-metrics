@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.future import select
 from typing import Optional
-
+import re
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -139,11 +139,19 @@ async def compare_text(result: ComparisonResultModel,
     original_text = result.original_text
     user_id = result.user_id
 
-    min_len = min(len(input_text), len(original_text))
-    errors = sum(
-        1 for i in range(min_len) if input_text[i] != original_text[i]
-    )
-    errors += abs(len(input_text) - len(original_text))
+    # Чистка текста
+    processed_input = re.sub(r"[^а-яё]",
+                             "", input_text.lower(),
+                             flags=re.IGNORECASE | re.UNICODE)
+    processed_original = re.sub(r"[^а-яё]",
+                                "", original_text.lower(),
+                                flags=re.IGNORECASE | re.UNICODE)
+
+    min_len = min(len(processed_input), len(processed_original))
+    errors = sum(1 for i in range(min_len)
+                 if processed_input[i] != processed_original[i])
+    # errors += abs(len(processed_input) - len(processed_original))
+
     completion = round((len(input_text) / len(original_text)) * 100, 2)
 
     db_result = ComparisonResult(
