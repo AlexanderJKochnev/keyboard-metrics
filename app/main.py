@@ -59,6 +59,7 @@ class KeyData(BaseModel):
     pressed_time: float
     released_time: float
     duration: float
+    user_id: int
 
 
 class ComparisonResultModel(BaseModel):

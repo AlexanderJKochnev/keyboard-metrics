@@ -58,7 +58,9 @@ function handleKeyUp(e) {
     fetch(`${BASE_URL}/add_metric`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(entry),
+        body: JSON.stringify({
+        ...entry,
+        user_id: currentUser}),
     });
 
     delete window.keyPresses[e.code];
