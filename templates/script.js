@@ -126,14 +126,15 @@ async function endTest() {
             body: JSON.stringify({
                 input_text: input,
                 original_text: original,
-                user_id: currentUser
+                user_id: currentUser,
+                test_result_id: test_result_id
             }),
         });
 
         const result = await response.json();
 
         if (!response.ok) {
-            throw new Error("Ошибка при сравнении текста");
+            throw new Error("Не удалось получить результат");
         }
 
 
@@ -272,6 +273,8 @@ async function showMainContent() {
     document.getElementById("instructions").classList.remove("hidden");
     document.getElementById("settings").classList.remove("hidden");
     document.getElementById("auth-modal").classList.add("hidden");
+
+    test_result_id = generateUuid();  // ← новый тест начинается с нового UUID
 
     await loadPrompt();           // Загружаем текст
     enableInputTracking();       // Разрешаем ввод

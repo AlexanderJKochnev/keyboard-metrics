@@ -6,7 +6,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import update
+# from sqlalchemy import update
 # from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 import logging
@@ -60,13 +60,14 @@ class KeyData(BaseModel):
     pressed_time: float
     released_time: float
     duration: float
-    user_id: int
+    test_result_id: str  # UUID
 
 
 class ComparisonResultModel(BaseModel):
     input_text: str
     original_text: str
     user_id: int  # ← добавлено
+    test_result_id: str  # uuid js
 
 
 # === Асинхронная зависимость для получения сессии ===
@@ -140,6 +141,7 @@ async def compare_text(result: ComparisonResultModel,
     input_text = result.input_text
     original_text = result.original_text
     user_id = result.user_id
+    test_result_id = result.test_result_id
 
     # Чистка текста
     processed_input = re.sub(r"[^а-яё]",
@@ -152,11 +154,14 @@ async def compare_text(result: ComparisonResultModel,
     min_len = min(len(processed_input), len(processed_original))
     errors = sum(1 for i in range(min_len)
                  if processed_input[i] != processed_original[i])
+    # не завершенный текст не является ошибкой, если это не так
+    # раскомментируй строку ниже
     # errors += abs(len(processed_input) - len(processed_original))
 
     completion = round((len(input_text) / len(original_text)) * 100, 2)
 
     db_result = ComparisonResult(
+        id=test_result_id,
         input_text=input_text,
         original_text=original_text,
         error_count=errors,
@@ -166,13 +171,6 @@ async def compare_text(result: ComparisonResultModel,
         avg_iki=None
     )
     db.add(db_result)
-    await db.flush()  # чтобы получить ID до коммита
-    # === Обновляем все метрики текущего теста ===
-    await db.execute(
-            update(KeyMetric).where(
-                    KeyMetric.user_id == user_id,
-                    KeyMetric.test_result_id is None).values(
-                    test_result_id=db_result.id))
     try:
         await db.commit()
         await db.refresh(db_result)
