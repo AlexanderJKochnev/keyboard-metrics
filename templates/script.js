@@ -159,7 +159,7 @@ async function endTest() {
             <p><strong>Среднее KHT:</strong> ${result.avg_kht || 'Нет данных'}</p>
             <p><strong>Среднее IKI:</strong> ${result.avg_iki || 'Нет данных'}</p>
             <div style="margin-top: 20px; display: flex; gap: 10px;">
-            <button onclick="repeatTest()">Повторить тест</button>
+            <button onclick="repeatTest()">Повторить</button>
             <button onclick="newTest()">Новый тест</button>
             </div>
         `;
